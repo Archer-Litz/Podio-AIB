@@ -1,475 +1,387 @@
+```html
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BORDERLAND: THE DECK [RANKING GLOBAL]</title>
+    <title>Inventário da Guilda - Cofre Central</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Biblioteca para gerar o Print/Imagem do HTML -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
-
-        :root {
-            --bg-dark: #050505;
-            --card-bg: #121212;
-            --neon-blue: #00f3ff;   /* Espadas */
-            --neon-red: #ff003c;    /* Copas */
-            --neon-green: #0aff0a;  /* Paus */
-            --neon-gold: #ffaa00;   /* Ouros */
-        }
-
-        body {
-            font-family: 'Rajdhani', sans-serif;
-            background-color: var(--bg-dark);
-            color: #d4d4d8;
-            background-image: 
-                linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.9)),
-                url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-            min-h-screen;
-        }
-
-        .mono { font-family: 'Share Tech Mono', monospace; }
-
-        /* --- RANKING STYLES --- */
-        .rank-card {
-            background: linear-gradient(90deg, rgba(20,20,20,1) 0%, rgba(30,30,30,0.5) 100%);
-            border-left: 4px solid #333;
-            transition: all 0.3s ease;
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1c1917; }
+        ::-webkit-scrollbar-thumb { background: #44403c; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #57534e; }
+        
+        /* Textura de fundo para dar aspecto de mural/cofre */
+        .bg-vault {
+            background-color: #1c1917;
+            background-image: radial-gradient(#44403c 1px, transparent 1px);
+            background-size: 20px 20px;
         }
         
-        /* Podium Styles */
-        .podium-container {
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #333;
-        }
-
-        .podium-place {
-            background: rgba(20, 20, 20, 0.9);
-            border: 1px solid #333;
-            border-radius: 8px 8px 0 0;
-            text-align: center;
-            padding: 1rem;
-            position: relative;
-            transition: transform 0.3s ease;
-        }
-        .podium-place:hover { transform: translateY(-5px); }
-
-        .place-1 { 
-            height: 180px; width: 140px; 
-            border-color: var(--neon-gold); 
-            box-shadow: 0 0 25px rgba(255, 170, 0, 0.15);
-            order: 2; /* Center */
-            z-index: 10;
-        }
-        .place-2 { 
-            height: 150px; width: 120px; 
-            border-color: #c0c0c0; 
-            box-shadow: 0 0 15px rgba(192, 192, 192, 0.1);
-            order: 1; /* Left */
-        }
-        .place-3 { 
-            height: 130px; width: 120px; 
-            border-color: #cd7f32; 
-            box-shadow: 0 0 15px rgba(205, 127, 50, 0.1);
-            order: 3; /* Right */
-        }
-
-        .crown-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
-
-        /* --- CARD MATRIX STYLES --- */
-        .playing-card {
-            aspect-ratio: 2/3;
-            background-color: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            opacity: 0.4;
-            filter: grayscale(80%);
-        }
-
-        .playing-card:hover { transform: translateY(-2px); border-color: #555; opacity: 0.7; }
-
-        /* Cartas Ativadas (Coletadas) */
-        .playing-card.collected {
-            opacity: 1;
-            filter: grayscale(0%);
-            background-color: #000;
-            box-shadow: 0 0 10px var(--glow-color), inset 0 0 10px var(--glow-color-dim);
-            border-color: var(--glow-color);
-            transform: scale(1.05);
-            z-index: 10;
-        }
-
-        .suit-spades { --glow-color: var(--neon-blue); --glow-color-dim: rgba(0, 243, 255, 0.1); color: var(--neon-blue); }
-        .suit-hearts { --glow-color: var(--neon-red); --glow-color-dim: rgba(255, 0, 60, 0.1); color: var(--neon-red); }
-        .suit-clubs { --glow-color: var(--neon-green); --glow-color-dim: rgba(10, 255, 10, 0.1); color: var(--neon-green); }
-        .suit-diamonds { --glow-color: var(--neon-gold); --glow-color-dim: rgba(255, 170, 0, 0.1); color: var(--neon-gold); }
-
-        .scanline {
-            width: 100%; height: 2px; background: rgba(255, 255, 255, 0.1);
-            position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99;
-            animation: scan 8s linear infinite;
-        }
-        @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
-
-        /* Custom Scrollbar for list */
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #111; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .item-slot:hover .item-actions { display: flex; }
     </style>
 </head>
-<body class="pb-20">
-    <div class="scanline"></div>
+<body class="bg-stone-900 text-stone-200 min-h-screen font-sans flex flex-col">
 
-    <header class="bg-black/90 border-b border-zinc-800 p-6 sticky top-0 z-50 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <i class="fa-solid fa-trophy text-3xl text-yellow-500 animate-pulse"></i>
-                <div>
-                    <h1 class="text-2xl font-black uppercase tracking-tighter text-white">Ranking <span class="text-red-600">Global</span></h1>
-                    <p class="text-[10px] mono text-zinc-500 tracking-widest">STATUS: PÓS-TIME SKIP // FASE 2</p>
-                </div>
+    <!-- Navegação / Controles Superiores -->
+    <nav class="bg-stone-950 border-b border-stone-800 p-4 sticky top-0 z-40 shadow-xl" id="controls-nav">
+        <div class="container mx-auto flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <i data-lucide="shield" class="text-amber-500 w-8 h-8"></i>
+                <h1 class="text-xl md:text-2xl font-bold text-white tracking-wider">MURAL DO COFRE</h1>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="openModal('addModal')" class="bg-stone-800 hover:bg-stone-700 text-stone-200 px-4 py-2 rounded flex items-center gap-2 border border-stone-600 transition-colors">
+                    <i data-lucide="plus" class="w-4 h-4"></i> <span class="hidden sm:inline">Adicionar Item</span>
+                </button>
+                <button onclick="clearInventory()" class="bg-red-900/50 hover:bg-red-800 text-red-200 px-4 py-2 rounded flex items-center gap-2 border border-red-900 transition-colors">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> <span class="hidden sm:inline">Limpar Tudo</span>
+                </button>
+                <button onclick="takePrint()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded flex items-center gap-2 border border-amber-800 transition-colors shadow-lg">
+                    <i data-lucide="camera" class="w-4 h-4"></i> <span class="hidden sm:inline">Gerar Imagem</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Aviso para o usuário -->
+    <div id="temp-warning" class="bg-stone-800 text-amber-500 text-center py-2 text-sm border-b border-stone-700">
+        <i data-lucide="info" class="inline w-4 h-4 mr-1"></i> Monte o inventário e clique em <b>Gerar Imagem</b>. Os dados não são salvos ao fechar a página.
+    </div>
+
+    <!-- Área de Captura (Tudo dentro desta div sai no print) -->
+    <main id="capture-area" class="flex-grow container mx-auto p-4 md:p-8 bg-vault">
+        
+        <!-- Cabeçalho do Cofre -->
+        <div class="bg-stone-800/80 backdrop-blur border border-stone-700 p-6 rounded-t-xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-6 relative">
+            <div>
+                <h2 class="text-2xl font-bold text-amber-500 uppercase flex items-center gap-2">
+                    <i data-lucide="box" class="w-6 h-6"></i> Inventário da Guilda
+                </h2>
+                <p class="text-stone-400 text-sm mt-1" id="date-display">Relatório de estado atual do cofre.</p>
             </div>
             
-            <div class="text-right">
-                <div class="text-[10px] uppercase text-zinc-500">Sua Coleção Atual</div>
-                <div class="text-3xl font-mono font-bold text-white"><span id="user-count">0</span> / 52</div>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto p-6 grid lg:grid-cols-12 gap-8">
-
-        <!-- COLUNA DA ESQUERDA: LEADERBOARD (NPCs) -->
-        <div class="lg:col-span-4 space-y-6">
-            <div class="bg-zinc-900/50 p-4 rounded-lg border border-zinc-800">
-                <h2 class="text-lg font-bold uppercase mb-6 flex items-center gap-2 text-center w-full justify-center"><i class="fa-solid fa-crown text-yellow-500"></i> Elite da Fronteira</h2>
-                
-                <!-- PÓDIO (TOP 3) -->
-                <div id="podium-area" class="podium-container">
-                    <!-- JS Popula o Pódio -->
-                </div>
-
-                <div class="border-t border-zinc-800 pt-4">
-                    <h3 class="text-xs font-bold uppercase text-zinc-500 mb-3 ml-2">Restante dos Jogadores</h3>
-                    <div id="leaderboard-list" class="space-y-2 h-96 overflow-y-auto pr-2 custom-scroll">
-                        <!-- JS Popula o Resto -->
+            <!-- Contador de Dinheiro -->
+            <div class="bg-stone-900 border border-stone-600 rounded-lg p-4 flex items-center gap-4 min-w-[250px] justify-between cursor-pointer hover:border-amber-500 transition-colors group" onclick="openModal('moneyModal')" title="Clique para editar os fundos">
+                <div class="flex items-center gap-2">
+                    <div class="bg-amber-500/20 p-2 rounded text-amber-500">
+                        <i data-lucide="coins" class="w-6 h-6"></i>
                     </div>
+                    <span class="text-stone-400 text-sm font-bold uppercase tracking-wider group-hover:text-amber-500 transition-colors">Fundos</span>
                 </div>
-            </div>
-
-            <!-- Painel de Controle do Jogador -->
-            <div class="bg-zinc-900/50 p-4 rounded-lg border border-zinc-800">
-                <h2 class="text-sm font-bold uppercase mb-4 text-zinc-400">Sistema de Dados</h2>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="saveDeck()" class="p-3 bg-blue-900/30 border border-blue-600 hover:bg-blue-900/50 text-blue-200 text-xs font-bold uppercase rounded transition"><i class="fa-solid fa-download mr-2"></i>Salvar JSON</button>
-                    <label class="p-3 bg-green-900/30 border border-green-600 hover:bg-green-900/50 text-green-200 text-xs font-bold uppercase rounded transition text-center cursor-pointer">
-                        <i class="fa-solid fa-upload mr-2"></i>Carregar
-                        <input type="file" id="load-deck" class="hidden" accept=".json" onchange="loadDeckFromFile(this)">
-                    </label>
-                    <button onclick="exportDeckImage()" class="col-span-2 p-3 bg-yellow-600/30 border border-yellow-600 hover:bg-yellow-600/50 text-yellow-200 text-xs font-bold uppercase rounded transition"><i class="fa-solid fa-image mr-2"></i>Exportar Coleção (IMG)</button>
-                    <button onclick="clearDeck()" class="col-span-2 p-2 bg-red-900/20 border border-red-900 hover:bg-red-900/40 text-red-500 text-[10px] font-bold uppercase rounded transition">Resetar Coleção</button>
+                <div class="text-2xl font-bold text-amber-400 flex items-center gap-2">
+                    <span id="moneyDisplay">0</span> <span class="text-sm text-stone-500">Ryo</span>
                 </div>
             </div>
         </div>
 
-        <!-- COLUNA DA DIREITA: MATRIZ DE CARTAS (JOGADOR) -->
-        <div class="lg:col-span-8">
-            <div id="user-collection-panel" class="bg-black p-6 rounded-xl border border-zinc-800 shadow-2xl relative">
-                <!-- Watermark for Export -->
-                <div class="absolute top-2 right-4 text-[10px] text-zinc-800 font-black uppercase pointer-events-none hidden" id="watermark">BORDERLAND ID SYSTEM</div>
-
-                <h2 class="text-xl font-black uppercase mb-6 text-white border-b border-zinc-800 pb-2 flex justify-between">
-                    <span><i class="fa-solid fa-layer-group mr-2 text-red-600"></i>Sua Coleção</span>
-                    <span class="text-xs font-normal text-zinc-500 mt-2 normal-case">Clique nas cartas para adicionar/remover</span>
-                </h2>
-
-                <!-- ESPADAS -->
-                <div class="mb-6">
-                    <h3 class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fa-solid fa-shield-halved"></i> Espadas (Físico)</h3>
-                    <div class="grid grid-cols-7 sm:grid-cols-13 gap-2" id="grid-spades"></div>
-                </div>
-
-                <!-- COPAS -->
-                <div class="mb-6">
-                    <h3 class="text-xs font-bold text-red-500 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fa-solid fa-heart"></i> Copas (Psique)</h3>
-                    <div class="grid grid-cols-7 sm:grid-cols-13 gap-2" id="grid-hearts"></div>
-                </div>
-
-                <!-- PAUS -->
-                <div class="mb-6">
-                    <h3 class="text-xs font-bold text-green-500 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fa-solid fa-users"></i> Paus (Unidade)</h3>
-                    <div class="grid grid-cols-7 sm:grid-cols-13 gap-2" id="grid-clubs"></div>
-                </div>
-
-                <!-- OUROS -->
-                <div class="mb-6">
-                    <h3 class="text-xs font-bold text-yellow-500 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fa-solid fa-brain"></i> Ouros (Intelecto)</h3>
-                    <div class="grid grid-cols-7 sm:grid-cols-13 gap-2" id="grid-diamonds"></div>
-                </div>
-
+        <!-- Grade de Itens -->
+        <div class="bg-stone-800/50 backdrop-blur border-x border-b border-stone-700 p-6 rounded-b-xl shadow-lg min-h-[500px]">
+            <div id="inventory-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- Itens serão renderizados aqui pelo JS -->
+            </div>
+            
+            <div id="empty-state" class="flex flex-col items-center justify-center h-64 text-stone-500">
+                <i data-lucide="package-open" class="w-16 h-16 mb-4 opacity-50"></i>
+                <p>O cofre está vazio. Adicione itens acima.</p>
             </div>
         </div>
-
     </main>
 
+    <!-- ================= MODAIS ================= -->
+
+    <!-- Fundo Escuro para Modais -->
+    <div id="modalOverlay" class="fixed inset-0 bg-black/70 z-50 hidden backdrop-blur-sm items-center justify-center p-4">
+        
+        <!-- Modal Adicionar/Editar Item -->
+        <div id="addModal" class="bg-stone-800 border border-stone-600 rounded-lg shadow-2xl w-full max-w-md hidden flex-col">
+            <div class="p-4 border-b border-stone-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-amber-500" id="itemModalTitle">Novo Item</h3>
+                <button onclick="closeModals()" class="text-stone-400 hover:text-white"><i data-lucide="x"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="item-id">
+                <div class="flex gap-4">
+                    <div class="w-1/3">
+                        <label class="block text-sm text-stone-400 mb-1">Ícone</label>
+                        <input type="text" id="item-icon" value="📦" class="w-full bg-stone-900 border border-stone-600 rounded p-2 text-center text-2xl text-white focus:border-amber-500 outline-none">
+                    </div>
+                    <div class="w-2/3">
+                        <label class="block text-sm text-stone-400 mb-1">Nome do Item</label>
+                        <input type="text" id="item-name" placeholder="Ex: Pergaminho" class="w-full bg-stone-900 border border-stone-600 rounded p-2 text-white focus:border-amber-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm text-stone-400 mb-1">Quantidade</label>
+                    <input type="number" id="item-qty" min="1" value="1" class="w-full bg-stone-900 border border-stone-600 rounded p-2 text-white focus:border-amber-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-stone-400 mb-1">Descrição (Opcional)</label>
+                    <input type="text" id="item-desc" placeholder="Ex: Capturado na missão" class="w-full bg-stone-900 border border-stone-600 rounded p-2 text-white focus:border-amber-500 outline-none">
+                </div>
+            </div>
+            <div class="p-4 border-t border-stone-700 flex justify-end gap-2">
+                <button onclick="closeModals()" class="px-4 py-2 bg-stone-700 hover:bg-stone-600 rounded text-white transition-colors">Cancelar</button>
+                <button onclick="saveItem()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded text-white font-bold transition-colors">Adicionar</button>
+            </div>
+        </div>
+
+        <!-- Modal Editar Dinheiro -->
+        <div id="moneyModal" class="bg-stone-800 border border-stone-600 rounded-lg shadow-2xl w-full max-w-sm hidden flex-col">
+            <div class="p-4 border-b border-stone-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-amber-500">Ajustar Fundos</h3>
+                <button onclick="closeModals()" class="text-stone-400 hover:text-white"><i data-lucide="x"></i></button>
+            </div>
+            <div class="p-6">
+                <label class="block text-sm text-stone-400 mb-1">Total (Ryo / Moedas)</label>
+                <input type="number" id="money-input" class="w-full bg-stone-900 border border-stone-600 rounded p-3 text-2xl text-amber-500 font-bold focus:border-amber-500 outline-none text-center">
+            </div>
+            <div class="p-4 border-t border-stone-700 flex justify-end gap-2">
+                <button onclick="closeModals()" class="px-4 py-2 bg-stone-700 hover:bg-stone-600 rounded text-white transition-colors">Cancelar</button>
+                <button onclick="saveMoney()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded text-white font-bold transition-colors">Salvar Valor</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- NOTIFICAÇÃO -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-emerald-600 text-white px-4 py-3 rounded shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+        <i data-lucide="check-circle"></i> <span id="toastMsg">Ação concluída!</span>
+    </div>
+
     <script>
-        // --- 1. DADOS DO LEADERBOARD (ATUALIZADO) ---
-        const npcPlayers = [
-            { name: "Luke Light", cards: 43 },
-            { name: "Alisson", cards: 7 },
-            { name: "Juan", cards: 4 },
-            { name: "Yoshihiro", cards: 4 },
-            { name: "Dante", cards: 4 },
-            { name: "Hayato", cards: 3 },
-            { name: "Tetsuya", cards: 3 },
-            { name: "Sanchez", cards: 3 },
-            { name: "Hiroshi", cards: 3 },
-            { name: "Koaya", cards: 3 }
-        ];
-
-        // --- GERAÇÃO DE 100 JOGADORES ALEATÓRIOS ---
-        function generateRandomPlayers() {
-            const firstNames = ["Ren", "Kaito", "Yuki", "Sora", "Jin", "Riku", "Haru", "Nagi", "Eiji", "Toma", "Shin", "Ryo", "Kai", "Leo", "Sho", "Ken", "Rui", "Kei", "Noa", "Rin", "Mei", "Mio", "Yui", "Hana", "Sara", "Emi", "Rei", "Aoi", "Ran", "Mai"];
-            
-            for(let i=0; i<100; i++) {
-                const isNamed = Math.random() > 0.7; // 30% chance de ter nome, 70% chance de ser "Imigrante #XXXX"
-                let name = "";
-                
-                if(isNamed) {
-                    name = firstNames[Math.floor(Math.random() * firstNames.length)] + " " + Math.floor(Math.random() * 99);
-                } else {
-                    name = `Imigrante #${Math.floor(1000 + Math.random() * 9000)}`;
-                }
-
-                // Cartas entre 0 e 2
-                const cards = Math.floor(Math.random() * 3); 
-                
-                npcPlayers.push({ name: name, cards: cards });
-            }
-        }
-
-        // Executar geração e ordenação
-        generateRandomPlayers();
-        npcPlayers.sort((a, b) => b.cards - a.cards);
-
-        // --- 2. DADOS DAS CARTAS ---
-        const suits = [
-            { id: 'spades', icon: 'fa-shield-halved', color: 'suit-spades', label: '♠' },
-            { id: 'hearts', icon: 'fa-heart', color: 'suit-hearts', label: '♥' },
-            { id: 'clubs', icon: 'fa-clover', color: 'suit-clubs', label: '♣' },
-            { id: 'diamonds', icon: 'fa-gem', color: 'suit-diamonds', label: '♦' }
-        ];
-        const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-
-        // Estado das cartas do usuário (Persistente)
-        let userDeck = new Set(); 
-
-        // --- 3. INICIALIZAÇÃO ---
-        window.onload = () => {
-            renderLeaderboard();
-            renderDeckGrid();
-            loadFromLocalStorage(); 
+        // Dados em memória (Não persistentes)
+        let GUILD_DATA = {
+            money: 0,
+            items: []
         };
 
-        // --- FUNÇÕES DO LEADERBOARD ---
-        function renderLeaderboard() {
-            const podiumContainer = document.getElementById('podium-area');
-            const listContainer = document.getElementById('leaderboard-list');
-            
-            podiumContainer.innerHTML = "";
-            listContainer.innerHTML = "";
+        // Inicializa ícones
+        lucide.createIcons();
+        
+        // Seta data atual
+        const today = new Date();
+        document.getElementById('date-display').innerText = `Relatório gerado em: ${today.toLocaleDateString('pt-BR')}`;
 
-            npcPlayers.forEach((player, index) => {
-                const rank = index + 1;
+        // Variáveis globais
+        const grid = document.getElementById('inventory-grid');
+        const emptyState = document.getElementById('empty-state');
+        const moneyDisplay = document.getElementById('moneyDisplay');
+        const overlay = document.getElementById('modalOverlay');
 
-                // RENDERIZAR PODIO (TOP 3)
-                if (rank <= 3) {
-                    let placeClass = `place-${rank}`;
-                    let colorClass = "";
-                    let icon = "";
+        // Renderiza o Inventário na tela
+        function renderInventory() {
+            // Atualiza dinheiro
+            moneyDisplay.innerText = GUILD_DATA.money.toLocaleString('pt-BR');
 
-                    if (rank === 1) { 
-                        colorClass = "text-yellow-500"; 
-                        icon = "fa-crown"; 
-                    } else if (rank === 2) { 
-                        colorClass = "text-gray-300"; 
-                        icon = "fa-medal"; 
-                    } else { 
-                        colorClass = "text-orange-700"; 
-                        icon = "fa-medal"; 
-                    }
-
-                    const html = `
-                        <div class="podium-place ${placeClass} flex flex-col justify-end items-center">
-                            <i class="fa-solid ${icon} ${colorClass} crown-icon animate-pulse"></i>
-                            <div class="font-black uppercase text-xs sm:text-sm text-white leading-tight mb-1">${player.name}</div>
-                            <div class="font-mono text-xl font-bold ${colorClass}">${player.cards}</div>
-                            <div class="text-[8px] uppercase text-zinc-600 font-bold">Cartas</div>
-                        </div>
-                    `;
-                    podiumContainer.innerHTML += html;
-                } 
-                // RENDERIZAR LISTA (4+)
-                else {
-                    const html = `
-                        <div class="rank-card border-l-2 border-zinc-700 p-2 flex justify-between items-center rounded-r bg-zinc-900/40 hover:bg-zinc-800 transition">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 text-[10px] text-zinc-600 font-mono text-right">#${rank}</div>
-                                <div class="text-zinc-400 text-xs font-bold uppercase">${player.name}</div>
-                            </div>
-                            <div class="flex flex-col items-end">
-                                <span class="text-zinc-300 text-xs mono font-bold">${player.cards} <span class="text-zinc-600 text-[8px]">CARTAS</span></span>
-                            </div>
-                        </div>
-                    `;
-                    listContainer.innerHTML += html;
-                }
-            });
-        }
-
-        // --- FUNÇÕES DO DECK TRACKER ---
-        function renderDeckGrid() {
-            suits.forEach(suit => {
-                const container = document.getElementById(`grid-${suit.id}`);
-                ranks.forEach(rank => {
-                    const cardId = `${suit.id}-${rank}`;
-                    
-                    const card = document.createElement('div');
-                    card.className = `playing-card ${suit.color}`;
-                    card.id = `card-${cardId}`;
-                    card.onclick = () => toggleCard(cardId);
-                    
-                    card.innerHTML = `
-                        <span class="text-xs font-bold font-mono absolute top-1 left-1">${rank}</span>
-                        <i class="fa-solid ${suit.icon} text-lg"></i>
-                        <span class="text-xs font-bold font-mono absolute bottom-1 right-1 transform rotate-180">${rank}</span>
-                    `;
-                    
-                    container.appendChild(card);
-                });
-            });
-        }
-
-        function toggleCard(cardId) {
-            const el = document.getElementById(`card-${cardId}`);
-            
-            if (userDeck.has(cardId)) {
-                userDeck.delete(cardId);
-                el.classList.remove('collected');
+            // Atualiza Itens
+            grid.innerHTML = '';
+            if (GUILD_DATA.items.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
             } else {
-                userDeck.add(cardId);
-                el.classList.add('collected');
-            }
-            
-            updateUI();
-            saveToLocalStorage();
-        }
-
-        function updateUI() {
-            document.getElementById('user-count').innerText = userDeck.size;
-            
-            // Re-aplica classes visuais baseado no Set
-            userDeck.forEach(id => {
-                const el = document.getElementById(`card-${id}`);
-                if(el) el.classList.add('collected');
-            });
-        }
-
-        function clearDeck() {
-            if(confirm("Tem certeza que deseja limpar sua coleção?")) {
-                userDeck.clear();
-                document.querySelectorAll('.playing-card').forEach(el => el.classList.remove('collected'));
-                updateUI();
-                saveToLocalStorage();
-            }
-        }
-
-        // --- PERSISTÊNCIA (AUTOMÁTICA) ---
-        function saveToLocalStorage() {
-            const dataArray = Array.from(userDeck);
-            localStorage.setItem('borderland_deck_v1', JSON.stringify(dataArray));
-        }
-
-        function loadFromLocalStorage() {
-            const savedData = localStorage.getItem('borderland_deck_v1');
-            if (savedData) {
-                const dataArray = JSON.parse(savedData);
-                userDeck = new Set(dataArray);
-                updateUI();
-            }
-        }
-
-        // --- PERSISTÊNCIA (ARQUIVO JSON) ---
-        function saveDeck() {
-            const data = {
-                timestamp: new Date().toISOString(),
-                count: userDeck.size,
-                cards: Array.from(userDeck)
-            };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-            const el = document.createElement('a');
-            el.setAttribute("href", dataStr);
-            el.setAttribute("download", "minhas_cartas_borderland.json");
-            el.click();
-        }
-
-        function loadDeckFromFile(input) {
-            const file = input.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const json = JSON.parse(e.target.result);
-                    if (json.cards && Array.isArray(json.cards)) {
-                        userDeck = new Set(json.cards);
-                        document.querySelectorAll('.playing-card').forEach(el => el.classList.remove('collected'));
-                        updateUI();
-                        saveToLocalStorage(); 
-                        alert(`Coleção carregada! ${userDeck.size} cartas recuperadas.`);
-                    }
-                } catch (err) {
-                    alert("Erro ao ler arquivo.");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // --- EXPORTAR IMAGEM ---
-        function exportDeckImage() {
-            const element = document.getElementById('user-collection-panel');
-            const watermark = document.getElementById('watermark');
-            
-            // Show watermark temporarily
-            watermark.classList.remove('hidden');
-
-            html2canvas(element, {
-                backgroundColor: '#000000', // Fundo preto para contraste
-                scale: 2 // Alta qualidade
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `minha_colecao_cartas.png`;
-                link.href = canvas.toDataURL();
-                link.click();
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
                 
-                // Hide watermark
-                watermark.classList.add('hidden');
-            });
+                GUILD_DATA.items.forEach(item => {
+                    const slot = document.createElement('div');
+                    slot.className = 'item-slot relative bg-stone-900 border border-stone-600 rounded-lg p-4 flex flex-col items-center justify-center text-center transition-all hover:border-amber-500 group min-h-[120px]';
+                    
+                    slot.innerHTML = `
+                        <div class="text-4xl mb-2 drop-shadow-lg">${item.icon}</div>
+                        <div class="font-bold text-stone-200 text-sm mb-1 leading-tight w-full truncate" title="${item.name}">${item.name}</div>
+                        <div class="text-amber-500 font-black bg-stone-950 px-2 py-0.5 rounded text-xs absolute top-2 right-2">x${item.qty}</div>
+                        ${item.desc ? `<div class="text-stone-500 text-[10px] mt-2 leading-tight px-1 hidden md:block w-full truncate" title="${item.desc}">${item.desc}</div>` : ''}
+                        
+                        <!-- Ações ocultas que aparecem no Hover (Não saem no print pois o mouse não estará em cima) -->
+                        <div class="item-actions hidden absolute inset-0 bg-stone-900/90 backdrop-blur-sm rounded-lg flex-col items-center justify-center gap-2">
+                            <button onclick="editItem(${item.id})" class="bg-stone-700 hover:bg-stone-600 text-white px-3 py-1 rounded text-xs w-20 flex items-center justify-center gap-1"><i data-lucide="edit-2" class="w-3 h-3"></i> Editar</button>
+                            <button onclick="deleteItem(${item.id})" class="bg-red-800 hover:bg-red-700 text-white px-3 py-1 rounded text-xs w-20 flex items-center justify-center gap-1"><i data-lucide="trash" class="w-3 h-3"></i> Apagar</button>
+                        </div>
+                    `;
+                    grid.appendChild(slot);
+                });
+                lucide.createIcons();
+            }
         }
+
+        // Funções de Modal
+        function openModal(id) {
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            document.getElementById('addModal').classList.add('hidden');
+            document.getElementById('moneyModal').classList.add('hidden');
+            
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(id).classList.add('flex');
+
+            if(id === 'addModal' && !document.getElementById('item-id').value) {
+                document.getElementById('itemModalTitle').innerText = 'Adicionar Item';
+            }
+            if(id === 'moneyModal') {
+                document.getElementById('money-input').value = GUILD_DATA.money;
+                document.getElementById('money-input').focus();
+            }
+        }
+
+        function closeModals() {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            // Limpa form de itens
+            document.getElementById('item-id').value = '';
+            document.getElementById('item-icon').value = '📦';
+            document.getElementById('item-name').value = '';
+            document.getElementById('item-qty').value = '1';
+            document.getElementById('item-desc').value = '';
+        }
+
+        // CRUD Itens
+        function saveItem() {
+            const id = document.getElementById('item-id').value;
+            const icon = document.getElementById('item-icon').value || '📦';
+            const name = document.getElementById('item-name').value.trim();
+            const qty = parseInt(document.getElementById('item-qty').value) || 1;
+            const desc = document.getElementById('item-desc').value.trim();
+
+            if(!name) return alert('O nome do item é obrigatório!');
+
+            if(id) {
+                // Editando
+                const index = GUILD_DATA.items.findIndex(i => i.id == id);
+                if(index !== -1) {
+                    GUILD_DATA.items[index] = { id: parseInt(id), icon, name, qty, desc };
+                }
+            } else {
+                // Criando novo
+                const newId = GUILD_DATA.items.length > 0 ? Math.max(...GUILD_DATA.items.map(i => i.id)) + 1 : 1;
+                GUILD_DATA.items.push({ id: newId, icon, name, qty, desc });
+            }
+
+            renderInventory();
+            closeModals();
+        }
+
+        function editItem(id) {
+            const item = GUILD_DATA.items.find(i => i.id === id);
+            if(item) {
+                document.getElementById('item-id').value = item.id;
+                document.getElementById('item-icon').value = item.icon;
+                document.getElementById('item-name').value = item.name;
+                document.getElementById('item-qty').value = item.qty;
+                document.getElementById('item-desc').value = item.desc || '';
+                document.getElementById('itemModalTitle').innerText = 'Editar Item';
+                openModal('addModal');
+            }
+        }
+
+        function deleteItem(id) {
+            GUILD_DATA.items = GUILD_DATA.items.filter(i => i.id !== id);
+            renderInventory();
+        }
+
+        function clearInventory() {
+            if(confirm('Tem certeza que deseja apagar TODOS os itens e zerar o dinheiro?')) {
+                GUILD_DATA.items = [];
+                GUILD_DATA.money = 0;
+                renderInventory();
+                showToast('Inventário resetado.');
+            }
+        }
+
+        // CRUD Dinheiro
+        function saveMoney() {
+            const val = parseInt(document.getElementById('money-input').value) || 0;
+            GUILD_DATA.money = val;
+            renderInventory();
+            closeModals();
+        }
+
+        // Gerar Imagem (Print)
+        function takePrint() {
+            if(GUILD_DATA.items.length === 0 && GUILD_DATA.money === 0) {
+                alert("O inventário está vazio! Adicione algo antes de gerar a imagem.");
+                return;
+            }
+
+            const captureArea = document.getElementById('capture-area');
+            const originalBg = captureArea.style.backgroundColor;
+            const originalBorder = captureArea.style.borderRadius;
+            
+            // Ajustes temporários para a foto ficar bonita
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .item-actions { display: none !important; }
+                .hover\\:border-amber-500 { border-color: #57534e !important; }
+            `;
+            document.head.appendChild(style);
+
+            // Adiciona bordas arredondadas e padding extra na imagem gerada
+            captureArea.style.padding = '32px';
+            captureArea.style.borderRadius = '16px';
+
+            showToast('Preparando imagem...', false);
+
+            // Aguarda um instante para aplicar os estilos
+            setTimeout(() => {
+                html2canvas(captureArea, {
+                    backgroundColor: "#1c1917", 
+                    scale: 2, 
+                    useCORS: true,
+                    logging: false
+                }).then(canvas => {
+                    // Cria link de download
+                    const link = document.createElement('a');
+                    link.download = `Inventario_Guilda_${new Date().toISOString().split('T')[0]}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    
+                    // Reverte limpeza e ajustes
+                    document.head.removeChild(style);
+                    captureArea.style.padding = '';
+                    captureArea.style.borderRadius = originalBorder;
+                    
+                    showToast('Imagem baixada com sucesso! 📸');
+                }).catch(err => {
+                    console.error(err);
+                    showToast('Erro ao gerar imagem.', true);
+                    document.head.removeChild(style);
+                    captureArea.style.padding = '';
+                });
+            }, 100);
+        }
+
+        // Notificação Toast
+        function showToast(msg, autoHide = true) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            if(autoHide) {
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 3000);
+            }
+        }
+
+        // Permitir salvar com Enter nos formulários
+        document.getElementById('money-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') saveMoney();
+        });
+        
+        ['item-icon', 'item-name', 'item-qty', 'item-desc'].forEach(id => {
+            document.getElementById(id).addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') saveItem();
+            });
+        });
 
     </script>
 </body>
 </html>
+
+
+```
