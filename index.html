@@ -1,387 +1,291 @@
-```html
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventário da Guilda - Cofre Central</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Biblioteca para gerar o Print/Imagem do HTML -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #1c1917; }
-        ::-webkit-scrollbar-thumb { background: #44403c; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #57534e; }
-        
-        /* Textura de fundo para dar aspecto de mural/cofre */
-        .bg-vault {
-            background-color: #1c1917;
-            background-image: radial-gradient(#44403c 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        
-        .item-slot:hover .item-actions { display: flex; }
-    </style>
-</head>
-<body class="bg-stone-900 text-stone-200 min-h-screen font-sans flex flex-col">
+```react
+import React, { useState, useEffect } from 'react';
 
-    <!-- Navegação / Controles Superiores -->
-    <nav class="bg-stone-950 border-b border-stone-800 p-4 sticky top-0 z-40 shadow-xl" id="controls-nav">
-        <div class="container mx-auto flex flex-wrap justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <i data-lucide="shield" class="text-amber-500 w-8 h-8"></i>
-                <h1 class="text-xl md:text-2xl font-bold text-white tracking-wider">MURAL DO COFRE</h1>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="openModal('addModal')" class="bg-stone-800 hover:bg-stone-700 text-stone-200 px-4 py-2 rounded flex items-center gap-2 border border-stone-600 transition-colors">
-                    <i data-lucide="plus" class="w-4 h-4"></i> <span class="hidden sm:inline">Adicionar Item</span>
+const App = () => {
+  const [theme, setTheme] = useState('itadori');
+  const [mode, setMode] = useState('tecnica'); // tecnica, voto, expansao
+  const [data, setData] = useState({
+    nome: 'Enxame Amaldiçoado',
+    descricao: 'A partir do próprio corpo...',
+    tecnicaUsada: 'Moscas Amaldiçoadas',
+    maestria: 'II',
+    statusEnergia: '45',
+    gasto: '1 de Seigen por mosca',
+    cooldown: '3 Turnos próprios',
+    imagem: 'Anexada.',
+    // Campos de Voto
+    votoBuff: '+10 de força pro Bom-ba-ye',
+    votoReducao: '-10% do gasto final',
+    // Campos de Expansão
+    alcance: '20 metros',
+    efeitoDominio: 'Acerto garantido de cortes invisíveis.',
+    tipoDominio: 'Incompleta' // Incompleta ou Completa
+  });
+
+  const themes = {
+    itadori: {
+      name: 'Yuji Itadori',
+      main: '#ef4444',
+      bg: '#0a0a0a',
+      accent: '#f87171',
+      gradient: 'from-red-900 to-black'
+    },
+    sukuna: {
+      name: 'Ryomen Sukuna',
+      main: '#ea580c',
+      bg: '#0f0505',
+      accent: '#fb923c',
+      gradient: 'from-orange-950 to-red-950'
+    },
+    gojo: {
+      name: 'Gojo Satoru',
+      main: '#3b82f6',
+      bg: '#050a15',
+      accent: '#818cf8',
+      gradient: 'from-blue-900 to-indigo-950'
+    },
+    geto: {
+      name: 'Geto Suguru',
+      main: '#d4af37',
+      bg: '#0a0d10',
+      accent: '#fbbf24',
+      gradient: 'from-yellow-900 to-slate-900'
+    },
+    kenjaku: {
+      name: 'Kenjaku',
+      main: '#9333ea',
+      bg: '#0d0712',
+      accent: '#c084fc',
+      gradient: 'from-purple-950 to-zinc-950'
+    }
+  };
+
+  const masteryRules = {
+    'I': { nivel: 'Início', req: 'Nenhum', seigen: 40 },
+    'II': { nivel: '10+', req: '8 Energia', seigen: 35 },
+    'III': { nivel: '20+', req: '15 Energia', seigen: 30 },
+    'IV': { nivel: '40+', req: '25 Energia', seigen: 25, exp: 'Incompleta (150S)' },
+    'V': { nivel: '60+', req: '50 Energia', seigen: 20, exp: 'Completa (300S)' },
+    'VI': { nivel: '80+', req: '65 Energia', seigen: 15, exp: 'Completa (200S)' },
+  };
+
+  const handleInput = (field, val) => setData(prev => ({ ...prev, [field]: val }));
+
+  const generateDiscordText = () => {
+    const line = `___***▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰***___`;
+    const title = mode === 'voto' ? '*[👻] Molde de Técnicas de energia amaldiçoada: Voto vinculativo*' :
+                  mode === 'expansao' ? `*[⛩️] Expansão de Domínio: ${data.tipoDominio}*` :
+                  '*[👻] Molde de Técnicas de energia amaldiçoada*';
+
+    let content = `${line}\n\n${title}\n\n${line}\n\n`;
+    content += `___***❮❖❯ Nome da técnica / Habilidade:***___\n> *↳ 【🌕】${data.nome}*\n\n`;
+    content += `___***❮❖❯ Descrição da técnica:***___\n> *↳ 【🌖】${data.descricao}*\n`;
+
+    if (mode === 'voto') {
+      content += `-# ***— Buff: ${data.votoBuff}***\n`;
+      content += `-# ***— Redução: ${data.votoReducao}***\n\n`;
+    }
+
+    if (mode === 'expansao') {
+      content += `> *↳ 【🏯】Efeito de Domínio: ${data.efeitoDominio}*\n`;
+      content += `> *↳ 【🌐】Alcance: ${data.alcance}*\n\n`;
+    }
+
+    content += `___***❮❖❯ Técnica (Amaldiçoada / Inata) utilizada:***___\n> *↳ 【🌗】${data.tecnicaUsada}*\n\n`;
+    content += `___***❮❖❯ Maestria:***___\n> *↳ 【🌘】${data.maestria}*\n\n`;
+    content += `___***❮❖❯ Status de energia:***___\n> *↳ 【🌒】${data.statusEnergia}*\n\n`;
+    
+    let custoFinal = data.gasto;
+    if (mode === 'expansao') {
+      if (data.tipoDominio === 'Incompleta') custoFinal = '150 de Seigen (Ativação)';
+      else custoFinal = data.maestria === 'VI' ? '200 de Seigen (Ativação)' : '300 de Seigen (Ativação)';
+    }
+    content += `___***❮❖❯ Gasto da técnica:***___\n> *↳ 【🌓】${custoFinal}*\n\n`;
+    
+    content += `___***❮❖❯ Cooldown da técnica:***___\n> *↳ 【🌔】${data.cooldown}*\n\n`;
+    content += `___***❮❖❯ Imagem (Opcional):***___\n> *↳ 【🌕】${data.imagem}*\n\n`;
+    content += line;
+
+    return content;
+  };
+
+  const copyToClipboard = () => {
+    const text = generateDiscordText();
+    navigator.clipboard.writeText(text);
+    const btn = document.getElementById('copyBtn');
+    btn.innerText = 'Copiado!';
+    setTimeout(() => btn.innerText = 'Copiar Molde', 2000);
+  };
+
+  const activeTheme = themes[theme];
+
+  return (
+    <div className={`min-h-screen p-4 md:p-8 text-zinc-100 transition-colors duration-500`} style={{ backgroundColor: activeTheme.bg }}>
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* Painel de Controle */}
+        <div className={`bg-zinc-900/50 p-6 rounded-2xl border border-zinc-800 shadow-2xl`}>
+          <div className="flex flex-wrap gap-2 mb-8 bg-black/40 p-2 rounded-xl border border-white/5">
+            {Object.entries(themes).map(([id, t]) => (
+              <button 
+                key={id}
+                onClick={() => setTheme(id)}
+                className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all ${theme === id ? 'bg-white text-black scale-105' : 'text-zinc-500 hover:text-zinc-300'}`}
+                style={theme === id ? { backgroundColor: t.main, color: '#000' } : {}}
+              >
+                {t.name.split(' ')[t.name.split(' ').length - 1]}
+              </button>
+            ))}
+          </div>
+
+          <h2 className="text-2xl font-black mb-6 uppercase italic tracking-tighter" style={{ color: activeTheme.main }}>
+            Gerador de Jujutsu
+          </h2>
+
+          <div className="space-y-6">
+            {/* Seletor de Modo */}
+            <div className="grid grid-cols-3 gap-2">
+              {['tecnica', 'voto', 'expansao'].map(m => (
+                <button 
+                  key={m}
+                  onClick={() => setMode(m)}
+                  className={`py-2 rounded-lg text-[10px] uppercase font-bold border transition-all ${mode === m ? 'border-[var(--accent)] text-white' : 'border-zinc-800 text-zinc-600'}`}
+                  style={mode === m ? { borderColor: activeTheme.main, backgroundColor: activeTheme.main + '20' } : {}}
+                >
+                  {m === 'tecnica' ? 'Técnica' : m === 'voto' ? 'Voto' : 'Domínio'}
                 </button>
-                <button onclick="clearInventory()" class="bg-red-900/50 hover:bg-red-800 text-red-200 px-4 py-2 rounded flex items-center gap-2 border border-red-900 transition-colors">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i> <span class="hidden sm:inline">Limpar Tudo</span>
-                </button>
-                <button onclick="takePrint()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded flex items-center gap-2 border border-amber-800 transition-colors shadow-lg">
-                    <i data-lucide="camera" class="w-4 h-4"></i> <span class="hidden sm:inline">Gerar Imagem</span>
-                </button>
+              ))}
             </div>
-        </div>
-    </nav>
 
-    <!-- Aviso para o usuário -->
-    <div id="temp-warning" class="bg-stone-800 text-amber-500 text-center py-2 text-sm border-b border-stone-700">
-        <i data-lucide="info" class="inline w-4 h-4 mr-1"></i> Monte o inventário e clique em <b>Gerar Imagem</b>. Os dados não são salvos ao fechar a página.
-    </div>
+            {/* Campos Comuns */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-zinc-500">Nome da Habilidade</label>
+                  <input value={data.nome} onChange={e => handleInput('nome', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm focus:outline-none focus:border-white/50" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-zinc-500">Maestria</label>
+                  <select value={data.maestria} onChange={e => handleInput('maestria', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm focus:outline-none">
+                    {Object.keys(masteryRules).map(m => <option key={m} value={m}>Maestria {m}</option>)}
+                  </select>
+                </div>
+              </div>
 
-    <!-- Área de Captura (Tudo dentro desta div sai no print) -->
-    <main id="capture-area" class="flex-grow container mx-auto p-4 md:p-8 bg-vault">
-        
-        <!-- Cabeçalho do Cofre -->
-        <div class="bg-stone-800/80 backdrop-blur border border-stone-700 p-6 rounded-t-xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-6 relative">
-            <div>
-                <h2 class="text-2xl font-bold text-amber-500 uppercase flex items-center gap-2">
-                    <i data-lucide="box" class="w-6 h-6"></i> Inventário da Guilda
-                </h2>
-                <p class="text-stone-400 text-sm mt-1" id="date-display">Relatório de estado atual do cofre.</p>
-            </div>
-            
-            <!-- Contador de Dinheiro -->
-            <div class="bg-stone-900 border border-stone-600 rounded-lg p-4 flex items-center gap-4 min-w-[250px] justify-between cursor-pointer hover:border-amber-500 transition-colors group" onclick="openModal('moneyModal')" title="Clique para editar os fundos">
-                <div class="flex items-center gap-2">
-                    <div class="bg-amber-500/20 p-2 rounded text-amber-500">
-                        <i data-lucide="coins" class="w-6 h-6"></i>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase font-bold text-zinc-500">Descrição Detalhada</label>
+                <textarea rows="4" value={data.descricao} onChange={e => handleInput('descricao', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm focus:outline-none resize-none" />
+              </div>
+
+              {/* Condicionais por Modo */}
+              {mode === 'voto' && (
+                <div className="grid grid-cols-2 gap-4 animate-fadeIn">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-zinc-400">Buff do Voto</label>
+                    <input value={data.votoBuff} onChange={e => handleInput('votoBuff', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-xs" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-zinc-400">Redução do Voto</label>
+                    <input value={data.votoReducao} onChange={e => handleInput('votoReducao', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-xs" />
+                  </div>
+                </div>
+              )}
+
+              {mode === 'expansao' && (
+                <div className="space-y-4 animate-fadeIn">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-bold text-zinc-400">Tipo de Expansão</label>
+                      <select value={data.tipoDominio} onChange={e => handleInput('tipoDominio', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-xs">
+                        <option value="Incompleta">Incompleta</option>
+                        <option value="Completa">Completa</option>
+                      </select>
                     </div>
-                    <span class="text-stone-400 text-sm font-bold uppercase tracking-wider group-hover:text-amber-500 transition-colors">Fundos</span>
-                </div>
-                <div class="text-2xl font-bold text-amber-400 flex items-center gap-2">
-                    <span id="moneyDisplay">0</span> <span class="text-sm text-stone-500">Ryo</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Grade de Itens -->
-        <div class="bg-stone-800/50 backdrop-blur border-x border-b border-stone-700 p-6 rounded-b-xl shadow-lg min-h-[500px]">
-            <div id="inventory-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                <!-- Itens serão renderizados aqui pelo JS -->
-            </div>
-            
-            <div id="empty-state" class="flex flex-col items-center justify-center h-64 text-stone-500">
-                <i data-lucide="package-open" class="w-16 h-16 mb-4 opacity-50"></i>
-                <p>O cofre está vazio. Adicione itens acima.</p>
-            </div>
-        </div>
-    </main>
-
-    <!-- ================= MODAIS ================= -->
-
-    <!-- Fundo Escuro para Modais -->
-    <div id="modalOverlay" class="fixed inset-0 bg-black/70 z-50 hidden backdrop-blur-sm items-center justify-center p-4">
-        
-        <!-- Modal Adicionar/Editar Item -->
-        <div id="addModal" class="bg-stone-800 border border-stone-600 rounded-lg shadow-2xl w-full max-w-md hidden flex-col">
-            <div class="p-4 border-b border-stone-700 flex justify-between items-center">
-                <h3 class="text-lg font-bold text-amber-500" id="itemModalTitle">Novo Item</h3>
-                <button onclick="closeModals()" class="text-stone-400 hover:text-white"><i data-lucide="x"></i></button>
-            </div>
-            <div class="p-6 space-y-4">
-                <input type="hidden" id="item-id">
-                <div class="flex gap-4">
-                    <div class="w-1/3">
-                        <label class="block text-sm text-stone-400 mb-1">Ícone</label>
-                        <input type="text" id="item-icon" value="📦" class="w-full bg-stone-900 border border-stone-600 rounded p-2 text-center text-2xl text-white focus:border-amber-500 outline-none">
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-bold text-zinc-400">Alcance (Metros)</label>
+                      <input value={data.alcance} onChange={e => handleInput('alcance', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-xs" />
                     </div>
-                    <div class="w-2/3">
-                        <label class="block text-sm text-stone-400 mb-1">Nome do Item</label>
-                        <input type="text" id="item-name" placeholder="Ex: Pergaminho" class="w-full bg-stone-900 border border-stone-600 rounded p-2 text-white focus:border-amber-500 outline-none">
-                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-zinc-400">Efeito Único do Domínio</label>
+                    <input value={data.efeitoDominio} onChange={e => handleInput('efeitoDominio', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-xs" placeholder="Ex: Acerto garantido de X..." />
+                  </div>
                 </div>
-                <div>
-                    <label class="block text-sm text-stone-400 mb-1">Quantidade</label>
-                    <input type="number" id="item-qty" min="1" value="1" class="w-full bg-stone-900 border border-stone-600 rounded p-2 text-white focus:border-amber-500 outline-none">
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-zinc-500">Técnica Inata Usada</label>
+                  <input value={data.tecnicaUsada} onChange={e => handleInput('tecnicaUsada', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm" />
                 </div>
-                <div>
-                    <label class="block text-sm text-stone-400 mb-1">Descrição (Opcional)</label>
-                    <input type="text" id="item-desc" placeholder="Ex: Capturado na missão" class="w-full bg-stone-900 border border-stone-600 rounded p-2 text-white focus:border-amber-500 outline-none">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-zinc-500">Energia (Status)</label>
+                  <input value={data.statusEnergia} onChange={e => handleInput('statusEnergia', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm" />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-zinc-500">Custo de Seigen</label>
+                  <input 
+                    value={mode === 'expansao' ? 'AUTOMÁTICO' : data.gasto} 
+                    disabled={mode === 'expansao'}
+                    onChange={e => handleInput('gasto', e.target.value)} 
+                    className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm disabled:opacity-30" 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-zinc-500">Cooldown</label>
+                  <input value={data.cooldown} onChange={e => handleInput('cooldown', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm" />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase font-bold text-zinc-500">Link da Imagem</label>
+                <input value={data.imagem} onChange={e => handleInput('imagem', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm" />
+              </div>
             </div>
-            <div class="p-4 border-t border-stone-700 flex justify-end gap-2">
-                <button onclick="closeModals()" class="px-4 py-2 bg-stone-700 hover:bg-stone-600 rounded text-white transition-colors">Cancelar</button>
-                <button onclick="saveItem()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded text-white font-bold transition-colors">Adicionar</button>
+
+            {/* Info Box Automática */}
+            <div className="bg-white/5 border border-white/10 p-4 rounded-xl space-y-2">
+              <h3 className="text-xs font-bold uppercase" style={{ color: activeTheme.main }}>Guia de Maestria {data.maestria}</h3>
+              <div className="grid grid-cols-2 text-[10px] gap-2">
+                <p><span className="text-zinc-500">Requisitos:</span> {masteryRules[data.maestria].nivel} / {masteryRules[data.maestria].req}</p>
+                <p><span className="text-zinc-500">Domínio:</span> {masteryRules[data.maestria].exp || 'Não disponível'}</p>
+              </div>
             </div>
+          </div>
         </div>
 
-        <!-- Modal Editar Dinheiro -->
-        <div id="moneyModal" class="bg-stone-800 border border-stone-600 rounded-lg shadow-2xl w-full max-w-sm hidden flex-col">
-            <div class="p-4 border-b border-stone-700 flex justify-between items-center">
-                <h3 class="text-lg font-bold text-amber-500">Ajustar Fundos</h3>
-                <button onclick="closeModals()" class="text-stone-400 hover:text-white"><i data-lucide="x"></i></button>
+        {/* Preview do Discord */}
+        <div className="flex flex-col gap-4">
+          <div className="bg-zinc-900 rounded-2xl border border-zinc-800 shadow-2xl flex-grow overflow-hidden flex flex-col">
+            <div className="bg-zinc-800/50 p-4 border-b border-zinc-700 flex justify-between items-center">
+              <span className="text-xs font-bold text-zinc-400">FORMATO DISCORD</span>
+              <button 
+                id="copyBtn"
+                onClick={copyToClipboard}
+                className="text-[10px] uppercase font-bold px-4 py-1 rounded transition-all hover:brightness-110 active:scale-95"
+                style={{ backgroundColor: activeTheme.main, color: '#000' }}
+              >
+                Copiar Molde
+              </button>
             </div>
-            <div class="p-6">
-                <label class="block text-sm text-stone-400 mb-1">Total (Ryo / Moedas)</label>
-                <input type="number" id="money-input" class="w-full bg-stone-900 border border-stone-600 rounded p-3 text-2xl text-amber-500 font-bold focus:border-amber-500 outline-none text-center">
-            </div>
-            <div class="p-4 border-t border-stone-700 flex justify-end gap-2">
-                <button onclick="closeModals()" class="px-4 py-2 bg-stone-700 hover:bg-stone-600 rounded text-white transition-colors">Cancelar</button>
-                <button onclick="saveMoney()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded text-white font-bold transition-colors">Salvar Valor</button>
-            </div>
+            <textarea 
+              readOnly 
+              value={generateDiscordText()} 
+              className="w-full h-full p-6 bg-transparent text-zinc-300 font-mono text-xs leading-relaxed focus:outline-none resize-none overflow-y-auto"
+            />
+          </div>
+          
+          <div className="bg-zinc-900/80 p-4 rounded-xl border border-zinc-800 text-[10px] text-zinc-500">
+            <p>Dica: O molde utiliza <b>___***</b> para criar uma borda elegante e destacada no Discord. Os campos de Seigen e buffs de Expansão são atualizados conforme as regras da Maestria selecionada.</p>
+          </div>
         </div>
 
+      </div>
     </div>
+  );
+};
 
-    <!-- NOTIFICAÇÃO -->
-    <div id="toast" class="fixed bottom-4 right-4 bg-emerald-600 text-white px-4 py-3 rounded shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
-        <i data-lucide="check-circle"></i> <span id="toastMsg">Ação concluída!</span>
-    </div>
-
-    <script>
-        // Dados em memória (Não persistentes)
-        let GUILD_DATA = {
-            money: 0,
-            items: []
-        };
-
-        // Inicializa ícones
-        lucide.createIcons();
-        
-        // Seta data atual
-        const today = new Date();
-        document.getElementById('date-display').innerText = `Relatório gerado em: ${today.toLocaleDateString('pt-BR')}`;
-
-        // Variáveis globais
-        const grid = document.getElementById('inventory-grid');
-        const emptyState = document.getElementById('empty-state');
-        const moneyDisplay = document.getElementById('moneyDisplay');
-        const overlay = document.getElementById('modalOverlay');
-
-        // Renderiza o Inventário na tela
-        function renderInventory() {
-            // Atualiza dinheiro
-            moneyDisplay.innerText = GUILD_DATA.money.toLocaleString('pt-BR');
-
-            // Atualiza Itens
-            grid.innerHTML = '';
-            if (GUILD_DATA.items.length === 0) {
-                emptyState.classList.remove('hidden');
-                emptyState.classList.add('flex');
-            } else {
-                emptyState.classList.add('hidden');
-                emptyState.classList.remove('flex');
-                
-                GUILD_DATA.items.forEach(item => {
-                    const slot = document.createElement('div');
-                    slot.className = 'item-slot relative bg-stone-900 border border-stone-600 rounded-lg p-4 flex flex-col items-center justify-center text-center transition-all hover:border-amber-500 group min-h-[120px]';
-                    
-                    slot.innerHTML = `
-                        <div class="text-4xl mb-2 drop-shadow-lg">${item.icon}</div>
-                        <div class="font-bold text-stone-200 text-sm mb-1 leading-tight w-full truncate" title="${item.name}">${item.name}</div>
-                        <div class="text-amber-500 font-black bg-stone-950 px-2 py-0.5 rounded text-xs absolute top-2 right-2">x${item.qty}</div>
-                        ${item.desc ? `<div class="text-stone-500 text-[10px] mt-2 leading-tight px-1 hidden md:block w-full truncate" title="${item.desc}">${item.desc}</div>` : ''}
-                        
-                        <!-- Ações ocultas que aparecem no Hover (Não saem no print pois o mouse não estará em cima) -->
-                        <div class="item-actions hidden absolute inset-0 bg-stone-900/90 backdrop-blur-sm rounded-lg flex-col items-center justify-center gap-2">
-                            <button onclick="editItem(${item.id})" class="bg-stone-700 hover:bg-stone-600 text-white px-3 py-1 rounded text-xs w-20 flex items-center justify-center gap-1"><i data-lucide="edit-2" class="w-3 h-3"></i> Editar</button>
-                            <button onclick="deleteItem(${item.id})" class="bg-red-800 hover:bg-red-700 text-white px-3 py-1 rounded text-xs w-20 flex items-center justify-center gap-1"><i data-lucide="trash" class="w-3 h-3"></i> Apagar</button>
-                        </div>
-                    `;
-                    grid.appendChild(slot);
-                });
-                lucide.createIcons();
-            }
-        }
-
-        // Funções de Modal
-        function openModal(id) {
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex');
-            
-            document.getElementById('addModal').classList.add('hidden');
-            document.getElementById('moneyModal').classList.add('hidden');
-            
-            document.getElementById(id).classList.remove('hidden');
-            document.getElementById(id).classList.add('flex');
-
-            if(id === 'addModal' && !document.getElementById('item-id').value) {
-                document.getElementById('itemModalTitle').innerText = 'Adicionar Item';
-            }
-            if(id === 'moneyModal') {
-                document.getElementById('money-input').value = GUILD_DATA.money;
-                document.getElementById('money-input').focus();
-            }
-        }
-
-        function closeModals() {
-            overlay.classList.add('hidden');
-            overlay.classList.remove('flex');
-            // Limpa form de itens
-            document.getElementById('item-id').value = '';
-            document.getElementById('item-icon').value = '📦';
-            document.getElementById('item-name').value = '';
-            document.getElementById('item-qty').value = '1';
-            document.getElementById('item-desc').value = '';
-        }
-
-        // CRUD Itens
-        function saveItem() {
-            const id = document.getElementById('item-id').value;
-            const icon = document.getElementById('item-icon').value || '📦';
-            const name = document.getElementById('item-name').value.trim();
-            const qty = parseInt(document.getElementById('item-qty').value) || 1;
-            const desc = document.getElementById('item-desc').value.trim();
-
-            if(!name) return alert('O nome do item é obrigatório!');
-
-            if(id) {
-                // Editando
-                const index = GUILD_DATA.items.findIndex(i => i.id == id);
-                if(index !== -1) {
-                    GUILD_DATA.items[index] = { id: parseInt(id), icon, name, qty, desc };
-                }
-            } else {
-                // Criando novo
-                const newId = GUILD_DATA.items.length > 0 ? Math.max(...GUILD_DATA.items.map(i => i.id)) + 1 : 1;
-                GUILD_DATA.items.push({ id: newId, icon, name, qty, desc });
-            }
-
-            renderInventory();
-            closeModals();
-        }
-
-        function editItem(id) {
-            const item = GUILD_DATA.items.find(i => i.id === id);
-            if(item) {
-                document.getElementById('item-id').value = item.id;
-                document.getElementById('item-icon').value = item.icon;
-                document.getElementById('item-name').value = item.name;
-                document.getElementById('item-qty').value = item.qty;
-                document.getElementById('item-desc').value = item.desc || '';
-                document.getElementById('itemModalTitle').innerText = 'Editar Item';
-                openModal('addModal');
-            }
-        }
-
-        function deleteItem(id) {
-            GUILD_DATA.items = GUILD_DATA.items.filter(i => i.id !== id);
-            renderInventory();
-        }
-
-        function clearInventory() {
-            if(confirm('Tem certeza que deseja apagar TODOS os itens e zerar o dinheiro?')) {
-                GUILD_DATA.items = [];
-                GUILD_DATA.money = 0;
-                renderInventory();
-                showToast('Inventário resetado.');
-            }
-        }
-
-        // CRUD Dinheiro
-        function saveMoney() {
-            const val = parseInt(document.getElementById('money-input').value) || 0;
-            GUILD_DATA.money = val;
-            renderInventory();
-            closeModals();
-        }
-
-        // Gerar Imagem (Print)
-        function takePrint() {
-            if(GUILD_DATA.items.length === 0 && GUILD_DATA.money === 0) {
-                alert("O inventário está vazio! Adicione algo antes de gerar a imagem.");
-                return;
-            }
-
-            const captureArea = document.getElementById('capture-area');
-            const originalBg = captureArea.style.backgroundColor;
-            const originalBorder = captureArea.style.borderRadius;
-            
-            // Ajustes temporários para a foto ficar bonita
-            const style = document.createElement('style');
-            style.innerHTML = `
-                .item-actions { display: none !important; }
-                .hover\\:border-amber-500 { border-color: #57534e !important; }
-            `;
-            document.head.appendChild(style);
-
-            // Adiciona bordas arredondadas e padding extra na imagem gerada
-            captureArea.style.padding = '32px';
-            captureArea.style.borderRadius = '16px';
-
-            showToast('Preparando imagem...', false);
-
-            // Aguarda um instante para aplicar os estilos
-            setTimeout(() => {
-                html2canvas(captureArea, {
-                    backgroundColor: "#1c1917", 
-                    scale: 2, 
-                    useCORS: true,
-                    logging: false
-                }).then(canvas => {
-                    // Cria link de download
-                    const link = document.createElement('a');
-                    link.download = `Inventario_Guilda_${new Date().toISOString().split('T')[0]}.png`;
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                    
-                    // Reverte limpeza e ajustes
-                    document.head.removeChild(style);
-                    captureArea.style.padding = '';
-                    captureArea.style.borderRadius = originalBorder;
-                    
-                    showToast('Imagem baixada com sucesso! 📸');
-                }).catch(err => {
-                    console.error(err);
-                    showToast('Erro ao gerar imagem.', true);
-                    document.head.removeChild(style);
-                    captureArea.style.padding = '';
-                });
-            }, 100);
-        }
-
-        // Notificação Toast
-        function showToast(msg, autoHide = true) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = msg;
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            
-            if(autoHide) {
-                setTimeout(() => {
-                    toast.classList.add('translate-y-20', 'opacity-0');
-                }, 3000);
-            }
-        }
-
-        // Permitir salvar com Enter nos formulários
-        document.getElementById('money-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') saveMoney();
-        });
-        
-        ['item-icon', 'item-name', 'item-qty', 'item-desc'].forEach(id => {
-            document.getElementById(id).addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') saveItem();
-            });
-        });
-
-    </script>
-</body>
-</html>
-
-
-```
+export default App;
