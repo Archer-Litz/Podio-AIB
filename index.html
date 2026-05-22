@@ -11,8 +11,10 @@
     <style>
         /* Estilos específicos para a impressão do documento */
         @media print {
-            body { 
-                background-color: white; 
+            body, html { 
+                background-color: white !important; 
+                height: auto !important;
+                overflow: visible !important;
             }
             .no-print { 
                 display: none !important; 
@@ -23,11 +25,31 @@
                 margin: 0 !important;
                 max-width: 100% !important;
                 width: 100% !important;
+                min-height: auto !important; /* Permite quebrar em várias páginas */
             }
             @page { 
-                margin: 2cm; 
+                size: A4 portrait; /* Força o tamanho A4 em retrato */
+                margin: 2.5cm 2cm; /* Margens superior/inferior e laterais */
             }
-            /* Ocultar barra de rolagem na impressão */
+            
+            /* Evita que um parágrafo deixe apenas 1 linha na página anterior ou seguinte */
+            p {
+                orphans: 3;
+                widows: 3;
+            }
+
+            /* Evita quebras de página logo após títulos */
+            h1, h2, h3 {
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+
+            /* Evita que o bloco de assinaturas seja cortado ao meio */
+            .signature-section {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
             ::-webkit-scrollbar {
                 display: none;
             }
@@ -59,11 +81,10 @@
         </div>
         
         <p class="text-sm text-slate-400 mb-6">
-            Preencha os dados abaixo. A visualização ao lado será atualizada em tempo real.
+            Preencha os dados. A visualização ao lado suporta múltiplas páginas ao imprimir.
         </p>
 
         <form id="ata-form" class="space-y-6">
-            
             <!-- Dados do Capítulo -->
             <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
                 <h2 class="text-sm font-semibold text-yellow-500 mb-4 flex items-center gap-2">
@@ -102,7 +123,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Data (Ex: 21 de março de 2026)</label>
+                        <label class="block text-xs text-slate-400 mb-1">Data</label>
                         <input type="text" id="in-data" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors" value="28 de março de 2026">
                     </div>
                     <div class="flex gap-3">
@@ -133,13 +154,13 @@
                         <input type="text" id="in-escrivao" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors" value="Daniel Ruas Miranda Barreto">
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Irmãos Presentes (separados por vírgula)</label>
+                        <label class="block text-xs text-slate-400 mb-1">Irmãos Presentes</label>
                         <textarea id="in-presentes" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors resize-none h-20">Hélio Jorge Neves, Daniel Ruas, Irmão Luís, Kauan, Pethrus, Lucius, Davi, Irmão Téo e Tio Cristiano</textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- Deliberações / Texto Principal -->
+            <!-- Deliberações -->
             <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
                 <h2 class="text-sm font-semibold text-yellow-500 mb-4 flex items-center gap-2">
                     <i class="ph ph-file-text text-lg"></i> Deliberações da Ata
@@ -155,14 +176,15 @@
     </div>
 
     <!-- ÁREA DA ATA (Visualização e Impressão) -->
-    <div class="w-full md:w-2/3 p-4 md:p-8 overflow-y-auto bg-slate-200 flex justify-center h-full">
+    <!-- Trocamos h-full por overflow-y-auto e removemos limites de altura fixa da "folha" -->
+    <div class="w-full md:w-2/3 p-4 md:p-8 overflow-y-auto bg-slate-200 flex justify-center items-start">
         
-        <!-- Folha A4 Branca -->
-        <div class="bg-white shadow-2xl w-full max-w-[210mm] min-h-[297mm] p-[2cm] print-area font-serif text-black relative">
+        <!-- O container principal agora age como um documento contínuo, o navegador cuida de cortar no A4 -->
+        <div class="bg-white shadow-xl w-full max-w-[210mm] p-[2cm] print-area font-serif text-black relative break-words">
             
             <!-- Cabeçalho -->
-            <div class="text-center mb-8 border-b-2 border-black pb-4">
-                <p class="text-[10px] text-gray-500 absolute top-4 left-8 no-print font-sans">Scribe Pro - Excelência em Escrivania DeMolay</p>
+            <div class="text-center mb-8 border-b-2 border-black pb-4 header-block">
+                <p class="text-[10px] text-gray-500 absolute top-4 left-8 no-print font-sans">Scribe Pro - Gerador de Atas</p>
                 <h1 class="text-xl font-bold uppercase tracking-wider mb-1">
                     Ata de Reunião <span id="out-tipo-reuniao" class="uppercase">ADMINISTRATIVA</span>
                 </h1>
@@ -186,35 +208,37 @@
                 </p>
                 
                 <div id="out-deliberacoes" class="text-justify leading-relaxed space-y-4 text-[15px]">
-                    <!-- Os parágrafos serão injetados aqui via JavaScript -->
+                    <!-- Parágrafos injetados via JS -->
                 </div>
             </div>
 
-            <!-- Encerramento -->
-            <div class="text-justify leading-relaxed mb-16">
-                <p class="indent-8">
-                    Nada mais havendo a tratar, o Mestre Conselheiro encerrou a sessão às <span id="out-hora-fim">21:30</span> de forma cordial, do que eu, Escrivão, lavrei a presente ata.
-                </p>
-            </div>
-
-            <!-- Assinaturas -->
-            <div class="flex flex-row justify-between items-center gap-4 mt-24">
-                <div class="text-center w-1/2">
-                    <div class="border-t border-black w-3/4 mx-auto mb-2"></div>
-                    <p class="font-bold uppercase text-sm">Irmão <span id="out-mestre-assinatura">Hélio Jorge Neves</span></p>
-                    <p class="text-xs uppercase">Mestre Conselheiro</p>
+            <!-- Encerramento (Atrelado ao bloco de assinatura via CSS para não separar) -->
+            <div class="signature-section mt-12">
+                <div class="text-justify leading-relaxed mb-16">
+                    <p class="indent-8">
+                        Nada mais havendo a tratar, o Mestre Conselheiro encerrou a sessão às <span id="out-hora-fim">21:30</span> de forma cordial, do que eu, Escrivão, lavrei a presente ata.
+                    </p>
                 </div>
-                
-                <div class="text-center w-1/2">
-                    <div class="border-t border-black w-3/4 mx-auto mb-2"></div>
-                    <p class="font-bold uppercase text-sm" id="out-escrivao-assinatura">Daniel Ruas Miranda Barreto</p>
-                    <p class="text-xs uppercase">Escrivão</p>
-                </div>
-            </div>
 
-            <!-- Rodapé -->
-            <div class="mt-20 text-center text-sm font-bold tracking-widest text-gray-700">
-                FIDELITAS AD MORTEM
+                <!-- Assinaturas -->
+                <div class="flex flex-row justify-between items-center gap-4 mt-16">
+                    <div class="text-center w-1/2">
+                        <div class="border-t border-black w-3/4 mx-auto mb-2"></div>
+                        <p class="font-bold uppercase text-sm">Irmão <span id="out-mestre-assinatura">Hélio Jorge Neves</span></p>
+                        <p class="text-xs uppercase">Mestre Conselheiro</p>
+                    </div>
+                    
+                    <div class="text-center w-1/2">
+                        <div class="border-t border-black w-3/4 mx-auto mb-2"></div>
+                        <p class="font-bold uppercase text-sm" id="out-escrivao-assinatura">Daniel Ruas Miranda Barreto</p>
+                        <p class="text-xs uppercase">Escrivão</p>
+                    </div>
+                </div>
+
+                <!-- Rodapé -->
+                <div class="mt-20 pb-8 text-center text-sm font-bold tracking-widest text-gray-700">
+                    FIDELITAS AD MORTEM
+                </div>
             </div>
 
         </div>
@@ -222,7 +246,6 @@
 
     <!-- Script de Lógica -->
     <script>
-        // Texto formalizado inicial
         const textoInicial = `O Mestre Conselheiro abriu os trabalhos parabenizando a todos pela recente campanha filantrópica, porém ressaltou pontos de melhoria essenciais, com destaque para a ausência de registros fotográficos. Pontuou que as fotos são vitais para estreitar a relação entre o Capítulo e a sociedade, desmistificando a Ordem para pais que ainda possuem receios sobre a instituição.
 
 O Irmão Daniel Ruas, Escrivão, tomou a palavra para alertar sobre ações ocorridas durante a campanha sem a devida consulta prévia aos superiores, o que gerou inconvenientes logísticos. 
@@ -243,10 +266,9 @@ O Irmão Téo pontuou que a campanha serviu para mostrar à sociedade que a Orde
 
 O Irmão Davi relatou a baixa adesão no evento de Páscoa e trouxe à tona dificuldades com a autorização de pais de potenciais candidatos. Por fim, sugeriu que se evitem certas brincadeiras internas que acabam afastando as pessoas.`;
 
-        // Função para formatar o texto das deliberações em parágrafos HTML
         function atualizarDeliberacoes(texto) {
             const container = document.getElementById('out-deliberacoes');
-            container.innerHTML = ''; // Limpar atual
+            container.innerHTML = ''; 
             
             const paragrafos = texto.split('\n');
             paragrafos.forEach(p => {
@@ -259,7 +281,6 @@ O Irmão Davi relatou a baixa adesão no evento de Páscoa e trouxe à tona difi
             });
         }
 
-        // Mapeamento de Inputs para Outputs
         const mapCampos = [
             { in: 'in-capitulo-nome', out: ['out-capitulo-nome', 'out-capitulo-nome-2'] },
             { in: 'in-capitulo-numero', out: ['out-capitulo-numero', 'out-capitulo-numero-2'] },
@@ -273,12 +294,10 @@ O Irmão Davi relatou a baixa adesão no evento de Páscoa e trouxe à tona difi
             { in: 'in-presentes', out: ['out-presentes'] }
         ];
 
-        // Inicializar a textarea com o texto base
         const textareaDelib = document.getElementById('in-deliberacoes');
         textareaDelib.value = textoInicial;
         atualizarDeliberacoes(textoInicial);
 
-        // Adicionar event listeners aos campos de texto normais
         mapCampos.forEach(mapping => {
             const inputEl = document.getElementById(mapping.in);
             inputEl.addEventListener('input', (e) => {
@@ -291,7 +310,6 @@ O Irmão Davi relatou a baixa adesão no evento de Páscoa e trouxe à tona difi
             });
         });
 
-        // Adicionar event listener específico para as deliberações
         textareaDelib.addEventListener('input', (e) => {
             atualizarDeliberacoes(e.target.value);
         });
