@@ -1,291 +1,304 @@
-```react
-import React, { useState, useEffect } from 'react';
-
-const App = () => {
-  const [theme, setTheme] = useState('itadori');
-  const [mode, setMode] = useState('tecnica'); // tecnica, voto, expansao
-  const [data, setData] = useState({
-    nome: 'Enxame Amaldiçoado',
-    descricao: 'A partir do próprio corpo...',
-    tecnicaUsada: 'Moscas Amaldiçoadas',
-    maestria: 'II',
-    statusEnergia: '45',
-    gasto: '1 de Seigen por mosca',
-    cooldown: '3 Turnos próprios',
-    imagem: 'Anexada.',
-    // Campos de Voto
-    votoBuff: '+10 de força pro Bom-ba-ye',
-    votoReducao: '-10% do gasto final',
-    // Campos de Expansão
-    alcance: '20 metros',
-    efeitoDominio: 'Acerto garantido de cortes invisíveis.',
-    tipoDominio: 'Incompleta' // Incompleta ou Completa
-  });
-
-  const themes = {
-    itadori: {
-      name: 'Yuji Itadori',
-      main: '#ef4444',
-      bg: '#0a0a0a',
-      accent: '#f87171',
-      gradient: 'from-red-900 to-black'
-    },
-    sukuna: {
-      name: 'Ryomen Sukuna',
-      main: '#ea580c',
-      bg: '#0f0505',
-      accent: '#fb923c',
-      gradient: 'from-orange-950 to-red-950'
-    },
-    gojo: {
-      name: 'Gojo Satoru',
-      main: '#3b82f6',
-      bg: '#050a15',
-      accent: '#818cf8',
-      gradient: 'from-blue-900 to-indigo-950'
-    },
-    geto: {
-      name: 'Geto Suguru',
-      main: '#d4af37',
-      bg: '#0a0d10',
-      accent: '#fbbf24',
-      gradient: 'from-yellow-900 to-slate-900'
-    },
-    kenjaku: {
-      name: 'Kenjaku',
-      main: '#9333ea',
-      bg: '#0d0712',
-      accent: '#c084fc',
-      gradient: 'from-purple-950 to-zinc-950'
-    }
-  };
-
-  const masteryRules = {
-    'I': { nivel: 'Início', req: 'Nenhum', seigen: 40 },
-    'II': { nivel: '10+', req: '8 Energia', seigen: 35 },
-    'III': { nivel: '20+', req: '15 Energia', seigen: 30 },
-    'IV': { nivel: '40+', req: '25 Energia', seigen: 25, exp: 'Incompleta (150S)' },
-    'V': { nivel: '60+', req: '50 Energia', seigen: 20, exp: 'Completa (300S)' },
-    'VI': { nivel: '80+', req: '65 Energia', seigen: 15, exp: 'Completa (200S)' },
-  };
-
-  const handleInput = (field, val) => setData(prev => ({ ...prev, [field]: val }));
-
-  const generateDiscordText = () => {
-    const line = `___***▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰***___`;
-    const title = mode === 'voto' ? '*[👻] Molde de Técnicas de energia amaldiçoada: Voto vinculativo*' :
-                  mode === 'expansao' ? `*[⛩️] Expansão de Domínio: ${data.tipoDominio}*` :
-                  '*[👻] Molde de Técnicas de energia amaldiçoada*';
-
-    let content = `${line}\n\n${title}\n\n${line}\n\n`;
-    content += `___***❮❖❯ Nome da técnica / Habilidade:***___\n> *↳ 【🌕】${data.nome}*\n\n`;
-    content += `___***❮❖❯ Descrição da técnica:***___\n> *↳ 【🌖】${data.descricao}*\n`;
-
-    if (mode === 'voto') {
-      content += `-# ***— Buff: ${data.votoBuff}***\n`;
-      content += `-# ***— Redução: ${data.votoReducao}***\n\n`;
-    }
-
-    if (mode === 'expansao') {
-      content += `> *↳ 【🏯】Efeito de Domínio: ${data.efeitoDominio}*\n`;
-      content += `> *↳ 【🌐】Alcance: ${data.alcance}*\n\n`;
-    }
-
-    content += `___***❮❖❯ Técnica (Amaldiçoada / Inata) utilizada:***___\n> *↳ 【🌗】${data.tecnicaUsada}*\n\n`;
-    content += `___***❮❖❯ Maestria:***___\n> *↳ 【🌘】${data.maestria}*\n\n`;
-    content += `___***❮❖❯ Status de energia:***___\n> *↳ 【🌒】${data.statusEnergia}*\n\n`;
-    
-    let custoFinal = data.gasto;
-    if (mode === 'expansao') {
-      if (data.tipoDominio === 'Incompleta') custoFinal = '150 de Seigen (Ativação)';
-      else custoFinal = data.maestria === 'VI' ? '200 de Seigen (Ativação)' : '300 de Seigen (Ativação)';
-    }
-    content += `___***❮❖❯ Gasto da técnica:***___\n> *↳ 【🌓】${custoFinal}*\n\n`;
-    
-    content += `___***❮❖❯ Cooldown da técnica:***___\n> *↳ 【🌔】${data.cooldown}*\n\n`;
-    content += `___***❮❖❯ Imagem (Opcional):***___\n> *↳ 【🌕】${data.imagem}*\n\n`;
-    content += line;
-
-    return content;
-  };
-
-  const copyToClipboard = () => {
-    const text = generateDiscordText();
-    navigator.clipboard.writeText(text);
-    const btn = document.getElementById('copyBtn');
-    btn.innerText = 'Copiado!';
-    setTimeout(() => btn.innerText = 'Copiar Molde', 2000);
-  };
-
-  const activeTheme = themes[theme];
-
-  return (
-    <div className={`min-h-screen p-4 md:p-8 text-zinc-100 transition-colors duration-500`} style={{ backgroundColor: activeTheme.bg }}>
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+```html
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scribe Pro - Gerador de Atas DeMolay</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* Estilos específicos para a impressão do documento */
+        @media print {
+            body { 
+                background-color: white; 
+            }
+            .no-print { 
+                display: none !important; 
+            }
+            .print-area { 
+                box-shadow: none !important; 
+                padding: 0 !important; 
+                margin: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+            @page { 
+                margin: 2cm; 
+            }
+            /* Ocultar barra de rolagem na impressão */
+            ::-webkit-scrollbar {
+                display: none;
+            }
+        }
         
-        {/* Painel de Controle */}
-        <div className={`bg-zinc-900/50 p-6 rounded-2xl border border-zinc-800 shadow-2xl`}>
-          <div className="flex flex-wrap gap-2 mb-8 bg-black/40 p-2 rounded-xl border border-white/5">
-            {Object.entries(themes).map(([id, t]) => (
-              <button 
-                key={id}
-                onClick={() => setTheme(id)}
-                className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all ${theme === id ? 'bg-white text-black scale-105' : 'text-zinc-500 hover:text-zinc-300'}`}
-                style={theme === id ? { backgroundColor: t.main, color: '#000' } : {}}
-              >
-                {t.name.split(' ')[t.name.split(' ').length - 1]}
-              </button>
-            ))}
-          </div>
+        /* Estilizar a scrollbar da sidebar para um look mais clean */
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: #1e293b; 
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 h-screen overflow-hidden flex flex-col md:flex-row">
 
-          <h2 className="text-2xl font-black mb-6 uppercase italic tracking-tighter" style={{ color: activeTheme.main }}>
-            Gerador de Jujutsu
-          </h2>
-
-          <div className="space-y-6">
-            {/* Seletor de Modo */}
-            <div className="grid grid-cols-3 gap-2">
-              {['tecnica', 'voto', 'expansao'].map(m => (
-                <button 
-                  key={m}
-                  onClick={() => setMode(m)}
-                  className={`py-2 rounded-lg text-[10px] uppercase font-bold border transition-all ${mode === m ? 'border-[var(--accent)] text-white' : 'border-zinc-800 text-zinc-600'}`}
-                  style={mode === m ? { borderColor: activeTheme.main, backgroundColor: activeTheme.main + '20' } : {}}
-                >
-                  {m === 'tecnica' ? 'Técnica' : m === 'voto' ? 'Voto' : 'Domínio'}
-                </button>
-              ))}
-            </div>
-
-            {/* Campos Comuns */}
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-zinc-500">Nome da Habilidade</label>
-                  <input value={data.nome} onChange={e => handleInput('nome', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm focus:outline-none focus:border-white/50" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-zinc-500">Maestria</label>
-                  <select value={data.maestria} onChange={e => handleInput('maestria', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm focus:outline-none">
-                    {Object.keys(masteryRules).map(m => <option key={m} value={m}>Maestria {m}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase font-bold text-zinc-500">Descrição Detalhada</label>
-                <textarea rows="4" value={data.descricao} onChange={e => handleInput('descricao', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm focus:outline-none resize-none" />
-              </div>
-
-              {/* Condicionais por Modo */}
-              {mode === 'voto' && (
-                <div className="grid grid-cols-2 gap-4 animate-fadeIn">
-                  <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-zinc-400">Buff do Voto</label>
-                    <input value={data.votoBuff} onChange={e => handleInput('votoBuff', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-xs" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-zinc-400">Redução do Voto</label>
-                    <input value={data.votoReducao} onChange={e => handleInput('votoReducao', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-xs" />
-                  </div>
-                </div>
-              )}
-
-              {mode === 'expansao' && (
-                <div className="space-y-4 animate-fadeIn">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-zinc-400">Tipo de Expansão</label>
-                      <select value={data.tipoDominio} onChange={e => handleInput('tipoDominio', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-xs">
-                        <option value="Incompleta">Incompleta</option>
-                        <option value="Completa">Completa</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-zinc-400">Alcance (Metros)</label>
-                      <input value={data.alcance} onChange={e => handleInput('alcance', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-xs" />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-zinc-400">Efeito Único do Domínio</label>
-                    <input value={data.efeitoDominio} onChange={e => handleInput('efeitoDominio', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-xs" placeholder="Ex: Acerto garantido de X..." />
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-zinc-500">Técnica Inata Usada</label>
-                  <input value={data.tecnicaUsada} onChange={e => handleInput('tecnicaUsada', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-zinc-500">Energia (Status)</label>
-                  <input value={data.statusEnergia} onChange={e => handleInput('statusEnergia', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-zinc-500">Custo de Seigen</label>
-                  <input 
-                    value={mode === 'expansao' ? 'AUTOMÁTICO' : data.gasto} 
-                    disabled={mode === 'expansao'}
-                    onChange={e => handleInput('gasto', e.target.value)} 
-                    className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm disabled:opacity-30" 
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-zinc-500">Cooldown</label>
-                  <input value={data.cooldown} onChange={e => handleInput('cooldown', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm" />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase font-bold text-zinc-500">Link da Imagem</label>
-                <input value={data.imagem} onChange={e => handleInput('imagem', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-sm" />
-              </div>
-            </div>
-
-            {/* Info Box Automática */}
-            <div className="bg-white/5 border border-white/10 p-4 rounded-xl space-y-2">
-              <h3 className="text-xs font-bold uppercase" style={{ color: activeTheme.main }}>Guia de Maestria {data.maestria}</h3>
-              <div className="grid grid-cols-2 text-[10px] gap-2">
-                <p><span className="text-zinc-500">Requisitos:</span> {masteryRules[data.maestria].nivel} / {masteryRules[data.maestria].req}</p>
-                <p><span className="text-zinc-500">Domínio:</span> {masteryRules[data.maestria].exp || 'Não disponível'}</p>
-              </div>
-            </div>
-          </div>
+    <!-- BARRA LATERAL / EDITOR (Oculto na impressão) -->
+    <div class="w-full md:w-1/3 bg-slate-900 text-white p-6 overflow-y-auto sidebar-scroll no-print h-full border-r border-slate-700">
+        <div class="flex items-center gap-3 mb-6 border-b border-slate-700 pb-4">
+            <i class="ph ph-pen-nib text-yellow-500 text-3xl"></i>
+            <h1 class="text-2xl font-bold">Scribe Pro</h1>
         </div>
+        
+        <p class="text-sm text-slate-400 mb-6">
+            Preencha os dados abaixo. A visualização ao lado será atualizada em tempo real.
+        </p>
 
-        {/* Preview do Discord */}
-        <div className="flex flex-col gap-4">
-          <div className="bg-zinc-900 rounded-2xl border border-zinc-800 shadow-2xl flex-grow overflow-hidden flex flex-col">
-            <div className="bg-zinc-800/50 p-4 border-b border-zinc-700 flex justify-between items-center">
-              <span className="text-xs font-bold text-zinc-400">FORMATO DISCORD</span>
-              <button 
-                id="copyBtn"
-                onClick={copyToClipboard}
-                className="text-[10px] uppercase font-bold px-4 py-1 rounded transition-all hover:brightness-110 active:scale-95"
-                style={{ backgroundColor: activeTheme.main, color: '#000' }}
-              >
-                Copiar Molde
-              </button>
+        <form id="ata-form" class="space-y-6">
+            
+            <!-- Dados do Capítulo -->
+            <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                <h2 class="text-sm font-semibold text-yellow-500 mb-4 flex items-center gap-2">
+                    <i class="ph ph-buildings text-lg"></i> Dados do Capítulo
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Nome do Capítulo</label>
+                        <input type="text" id="in-capitulo-nome" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors" value="TORRE DE VIGIA">
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="w-1/3">
+                            <label class="block text-xs text-slate-400 mb-1">Número</label>
+                            <input type="text" id="in-capitulo-numero" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors" value="1154">
+                        </div>
+                        <div class="w-2/3">
+                            <label class="block text-xs text-slate-400 mb-1">Estado</label>
+                            <input type="text" id="in-estado" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors" value="MINAS GERAIS">
+                        </div>
+                    </div>
+                </div>
             </div>
-            <textarea 
-              readOnly 
-              value={generateDiscordText()} 
-              className="w-full h-full p-6 bg-transparent text-zinc-300 font-mono text-xs leading-relaxed focus:outline-none resize-none overflow-y-auto"
-            />
-          </div>
-          
-          <div className="bg-zinc-900/80 p-4 rounded-xl border border-zinc-800 text-[10px] text-zinc-500">
-            <p>Dica: O molde utiliza <b>___***</b> para criar uma borda elegante e destacada no Discord. Os campos de Seigen e buffs de Expansão são atualizados conforme as regras da Maestria selecionada.</p>
-          </div>
-        </div>
 
-      </div>
+            <!-- Dados da Reunião -->
+            <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                <h2 class="text-sm font-semibold text-yellow-500 mb-4 flex items-center gap-2">
+                    <i class="ph ph-clock text-lg"></i> Dados da Reunião
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Tipo de Reunião</label>
+                        <select id="in-tipo-reuniao" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors">
+                            <option value="ADMINISTRATIVA">Administrativa</option>
+                            <option value="RITUALÍSTICA">Ritualística</option>
+                            <option value="MAGNA">Magna</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Data (Ex: 21 de março de 2026)</label>
+                        <input type="text" id="in-data" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors" value="28 de março de 2026">
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="w-1/2">
+                            <label class="block text-xs text-slate-400 mb-1">Hora Início</label>
+                            <input type="time" id="in-hora-inicio" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors" value="19:00">
+                        </div>
+                        <div class="w-1/2">
+                            <label class="block text-xs text-slate-400 mb-1">Hora Fim</label>
+                            <input type="time" id="in-hora-fim" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors" value="21:30">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Envolvidos -->
+            <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                <h2 class="text-sm font-semibold text-yellow-500 mb-4 flex items-center gap-2">
+                    <i class="ph ph-users text-lg"></i> Envolvidos
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Mestre Conselheiro</label>
+                        <input type="text" id="in-mestre" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors" value="Hélio Jorge Neves">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Escrivão</label>
+                        <input type="text" id="in-escrivao" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors" value="Daniel Ruas Miranda Barreto">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Irmãos Presentes (separados por vírgula)</label>
+                        <textarea id="in-presentes" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors resize-none h-20">Hélio Jorge Neves, Daniel Ruas, Irmão Luís, Kauan, Pethrus, Lucius, Davi, Irmão Téo e Tio Cristiano</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deliberações / Texto Principal -->
+            <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                <h2 class="text-sm font-semibold text-yellow-500 mb-4 flex items-center gap-2">
+                    <i class="ph ph-file-text text-lg"></i> Deliberações da Ata
+                </h2>
+                <textarea id="in-deliberacoes" class="w-full bg-slate-900 rounded p-2 text-sm border border-slate-600 focus:border-yellow-500 outline-none transition-colors resize-y min-h-[300px]"></textarea>
+            </div>
+
+            <button type="button" onclick="window.print()" class="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors mt-6 shadow-lg mb-8">
+                <i class="ph ph-printer text-xl"></i>
+                Gerar PDF / Imprimir
+            </button>
+        </form>
     </div>
-  );
-};
 
-export default App;
+    <!-- ÁREA DA ATA (Visualização e Impressão) -->
+    <div class="w-full md:w-2/3 p-4 md:p-8 overflow-y-auto bg-slate-200 flex justify-center h-full">
+        
+        <!-- Folha A4 Branca -->
+        <div class="bg-white shadow-2xl w-full max-w-[210mm] min-h-[297mm] p-[2cm] print-area font-serif text-black relative">
+            
+            <!-- Cabeçalho -->
+            <div class="text-center mb-8 border-b-2 border-black pb-4">
+                <p class="text-[10px] text-gray-500 absolute top-4 left-8 no-print font-sans">Scribe Pro - Excelência em Escrivania DeMolay</p>
+                <h1 class="text-xl font-bold uppercase tracking-wider mb-1">
+                    Ata de Reunião <span id="out-tipo-reuniao" class="uppercase">ADMINISTRATIVA</span>
+                </h1>
+                <h2 class="text-lg font-semibold uppercase">
+                    Capítulo <span id="out-capitulo-nome">TORRE DE VIGIA</span> N° <span id="out-capitulo-numero">1154</span> - <span id="out-estado">MINAS GERAIS</span>
+                </h2>
+            </div>
+
+            <!-- Abertura -->
+            <div class="text-justify leading-relaxed mb-6 space-y-4">
+                <p class="indent-8">
+                    Aos <span id="out-data">28 de março de 2026</span>, na sede do Capítulo <span id="out-capitulo-nome-2">TORRE DE VIGIA</span> N° <span id="out-capitulo-numero-2">1154</span>, reuniram-se os membros para sessão <span id="out-tipo-reuniao-2" class="lowercase">administrativa</span>. Sob a presidência do Mestre Conselheiro, Irmão <span id="out-mestre">Hélio Jorge Neves</span>, os trabalhos foram abertos em harmonia.
+                </p>
+            </div>
+
+            <!-- Deliberações -->
+            <div class="mb-6">
+                <h3 class="font-bold uppercase mb-4 text-sm">Deliberações:</h3>
+                <p class="text-justify leading-relaxed mb-4 indent-8">
+                    Instaurou-se a presente reunião às <span id="out-hora-inicio">19:00</span>, contando com a presença dos Irmãos: <span id="out-presentes">Hélio Jorge Neves, Daniel Ruas, Irmão Luís, Kauan, Pethrus, Lucius, Davi, Irmão Téo e Tio Cristiano</span>.
+                </p>
+                
+                <div id="out-deliberacoes" class="text-justify leading-relaxed space-y-4 text-[15px]">
+                    <!-- Os parágrafos serão injetados aqui via JavaScript -->
+                </div>
+            </div>
+
+            <!-- Encerramento -->
+            <div class="text-justify leading-relaxed mb-16">
+                <p class="indent-8">
+                    Nada mais havendo a tratar, o Mestre Conselheiro encerrou a sessão às <span id="out-hora-fim">21:30</span> de forma cordial, do que eu, Escrivão, lavrei a presente ata.
+                </p>
+            </div>
+
+            <!-- Assinaturas -->
+            <div class="flex flex-row justify-between items-center gap-4 mt-24">
+                <div class="text-center w-1/2">
+                    <div class="border-t border-black w-3/4 mx-auto mb-2"></div>
+                    <p class="font-bold uppercase text-sm">Irmão <span id="out-mestre-assinatura">Hélio Jorge Neves</span></p>
+                    <p class="text-xs uppercase">Mestre Conselheiro</p>
+                </div>
+                
+                <div class="text-center w-1/2">
+                    <div class="border-t border-black w-3/4 mx-auto mb-2"></div>
+                    <p class="font-bold uppercase text-sm" id="out-escrivao-assinatura">Daniel Ruas Miranda Barreto</p>
+                    <p class="text-xs uppercase">Escrivão</p>
+                </div>
+            </div>
+
+            <!-- Rodapé -->
+            <div class="mt-20 text-center text-sm font-bold tracking-widest text-gray-700">
+                FIDELITAS AD MORTEM
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script de Lógica -->
+    <script>
+        // Texto formalizado inicial
+        const textoInicial = `O Mestre Conselheiro abriu os trabalhos parabenizando a todos pela recente campanha filantrópica, porém ressaltou pontos de melhoria essenciais, com destaque para a ausência de registros fotográficos. Pontuou que as fotos são vitais para estreitar a relação entre o Capítulo e a sociedade, desmistificando a Ordem para pais que ainda possuem receios sobre a instituição.
+
+O Irmão Daniel Ruas, Escrivão, tomou a palavra para alertar sobre ações ocorridas durante a campanha sem a devida consulta prévia aos superiores, o que gerou inconvenientes logísticos. 
+
+O Irmão Luís parabenizou os recém-iniciados por sua primeira reunião ritualística, fazendo breves correções sobre a marcha (entrada com o pé esquerdo). Ele endossou a fala do Mestre Conselheiro sobre a importância das fotos para a expansão da visibilidade da Ordem. Posteriormente, Luís enfatizou que a Ordem é uma escola de líderes, relatando como a instituição o ajudou a superar a timidez, e cobrou maior união e diálogo sem receios entre os irmãos.
+
+O Irmão Kauan destacou a relevância do cargo de Hospitaleiro. Sugeriu que, em campanhas futuras, haja mais escuta e diálogo prévio para evitar estresses, e que a execução não precisa ser rigidamente inflexível. Kauan também trouxe uma reflexão profunda sobre vulnerabilidade social e espiritual, lembrando que o objetivo da Ordem não é seguir "tendências" de internet, mas praticar as 7 Virtudes, resgatando jovens influenciados negativamente.
+
+O Irmão Pethrus relatou problemas durante os registros da campanha, onde o acúmulo desordenado de pessoas atrapalhou o andamento. Relembrou o princípio do trabalho em equipe: "se um falha, todos falham". Cobrou maior responsabilidade com horários e compromissos, e questionou as providências a serem tomadas em relação aos irmãos inativos, um problema recorrente desde o ano anterior. Pethrus também expressou ressalvas sobre o uso de rádio para captação, alegando que atrai pessoas fora do perfil desejado.
+
+O Irmão Lucius expressou insatisfação com a baixa presença de membros de Grau DeMolay nas atividades. Sobre a campanha, citou o constrangimento e a vulnerabilidade de fotografar pessoas carentes. Lucius também alertou sobre a difamação da Ordem nas redes sociais e posicionou-se contra a ideia de ir atrás de membros faltosos, argumentando que a ausência se dá, na maioria das vezes, por motivos fúteis ou preguiça.
+
+Neste ínterim, o Mestre Conselheiro Hélio sugeriu que as próximas campanhas de cestas básicas sejam mais direcionadas e triadas. Quanto aos faltosos, foi incisivo ao afirmar que não farão papel de "babá" e que membros reiteradamente ausentes e sem compromisso serão cortados. Hélio também sugeriu a realização de palestras em escolas e citou a oportunidade de reaproximação com a Maçonaria através de seu pai.
+
+O Tio Cristiano (Conselho Consultivo) elogiou a dedicação dos jovens. Aconselhou que não se frustrem quando o cronograma sofrer alterações, pois o produto final tem sido excelente. Incentivou fortemente o uso das redes sociais e inteligência artificial para melhorar a divulgação das ações. Em relação aos faltosos, discordou da postura radical, aconselhando que o Capítulo deve buscar entender os motivos da ausência e dialogar antes de tomar decisões de corte. Outros Tios presentes sugeriram parcerias com o CRAS para alcance de pessoas em vulnerabilidade e o envio de mensagens privadas aos faltosos.
+
+O Irmão Téo pontuou que a campanha serviu para mostrar à sociedade que a Ordem forja bons cidadãos, sendo de suma importância para o Brasil. 
+
+O Irmão Davi relatou a baixa adesão no evento de Páscoa e trouxe à tona dificuldades com a autorização de pais de potenciais candidatos. Por fim, sugeriu que se evitem certas brincadeiras internas que acabam afastando as pessoas.`;
+
+        // Função para formatar o texto das deliberações em parágrafos HTML
+        function atualizarDeliberacoes(texto) {
+            const container = document.getElementById('out-deliberacoes');
+            container.innerHTML = ''; // Limpar atual
+            
+            const paragrafos = texto.split('\n');
+            paragrafos.forEach(p => {
+                if(p.trim() !== '') {
+                    const el = document.createElement('p');
+                    el.className = 'indent-8';
+                    el.textContent = p;
+                    container.appendChild(el);
+                }
+            });
+        }
+
+        // Mapeamento de Inputs para Outputs
+        const mapCampos = [
+            { in: 'in-capitulo-nome', out: ['out-capitulo-nome', 'out-capitulo-nome-2'] },
+            { in: 'in-capitulo-numero', out: ['out-capitulo-numero', 'out-capitulo-numero-2'] },
+            { in: 'in-estado', out: ['out-estado'] },
+            { in: 'in-tipo-reuniao', out: ['out-tipo-reuniao', 'out-tipo-reuniao-2'] },
+            { in: 'in-data', out: ['out-data'] },
+            { in: 'in-hora-inicio', out: ['out-hora-inicio'] },
+            { in: 'in-hora-fim', out: ['out-hora-fim'] },
+            { in: 'in-mestre', out: ['out-mestre', 'out-mestre-assinatura'] },
+            { in: 'in-escrivao', out: ['out-escrivao-assinatura'] },
+            { in: 'in-presentes', out: ['out-presentes'] }
+        ];
+
+        // Inicializar a textarea com o texto base
+        const textareaDelib = document.getElementById('in-deliberacoes');
+        textareaDelib.value = textoInicial;
+        atualizarDeliberacoes(textoInicial);
+
+        // Adicionar event listeners aos campos de texto normais
+        mapCampos.forEach(mapping => {
+            const inputEl = document.getElementById(mapping.in);
+            inputEl.addEventListener('input', (e) => {
+                mapping.out.forEach(outId => {
+                    const outEl = document.getElementById(outId);
+                    if(outEl) {
+                        outEl.textContent = e.target.value;
+                    }
+                });
+            });
+        });
+
+        // Adicionar event listener específico para as deliberações
+        textareaDelib.addEventListener('input', (e) => {
+            atualizarDeliberacoes(e.target.value);
+        });
+
+    </script>
+</body>
+</html>
+
+```
